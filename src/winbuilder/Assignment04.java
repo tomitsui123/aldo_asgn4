@@ -98,7 +98,6 @@ public class Assignment04 extends JFrame {
 				Student studentRecord = new Student(name, sid, cCode, cTitle, grade);
 				students.add(studentRecord);
 				
-//				cbxStudent.add
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
