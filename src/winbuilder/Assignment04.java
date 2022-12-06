@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.JLabel;
+import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.Font;
@@ -20,9 +23,11 @@ import javax.swing.JComboBox;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
+
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
 
 /*	pending:
@@ -43,7 +48,7 @@ public class Assignment04 extends JFrame{
 	ArrayList<Student> students = new ArrayList<Student>();
 	private JList listCourseList;
 	private JLabel lblCourseTitle;
-	private JComboBox cbxGrade;
+	private JComboBox<String> cbxGrade;
 	private JButton btnSave;
 	
 	/**
@@ -55,6 +60,14 @@ public class Assignment04 extends JFrame{
 				try {
 					Assignment04 frame = new Assignment04();
 					frame.setVisible(true);
+					frame.addWindowListener(new WindowAdapter() {
+			            @Override
+			            public void windowClosing(WindowEvent e) {
+			                System.out.println("WindowClosingDemo.windowClosing");
+			        		closeDB();
+			                System.exit(0);
+			            }
+					});
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -71,7 +84,6 @@ public class Assignment04 extends JFrame{
 		}
 		
 		String msAccDB = "Studentcourse.accdb";
-//		String msAccDB = "Question.accdb";
 		String dbURL = "jdbc:ucanaccess://" + msAccDB;
 		
 		try {
@@ -88,17 +100,20 @@ public class Assignment04 extends JFrame{
 		
 		try {
 			rs = statement.executeQuery(sqlStr);
+			students = new ArrayList<Student>();
 			while (rs.next()) {
-//				int id = rs.getInt("ID");
 				String name = rs.getString("sName");
 				String sid = rs.getString("sId");
 				String cCode = rs.getString("cCode");
 				String cTitle = rs.getString("cTitle");
-				String grade = rs.getString("grade");
-//				System.out.println(name + sid);
-				
-				Student studentRecord = new Student(name, sid, cCode, cTitle, grade);
-				students.add(studentRecord);
+				Grade grade = Grade.valueOf(rs.getString("grade"));
+				Student studentRecord = new Student(name, sid);
+				if (!students.contains(studentRecord)) {
+					studentRecord.addCourse(new Course(cCode, cTitle, grade));
+					students.add(studentRecord);					
+				} else {
+					students.get(students.lastIndexOf(studentRecord)).addCourse(new Course(cCode, cTitle, grade));					
+				}
 				
 			}
 		} catch (SQLException e) {
@@ -110,7 +125,7 @@ public class Assignment04 extends JFrame{
 
 	}
 	
-	public void closeDB() {
+	public static void closeDB() {
 		try {
 			connection.close();
 			statement.close();
@@ -121,24 +136,21 @@ public class Assignment04 extends JFrame{
 		}
 	}
 	
-	private void createEvents() {
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				updateGrade();
-			}
-		});
-	}
-	
-	public void updateGrade() {
+	public void updateGrade(String sid, String cCode, String grade) {
 		// SQL Query TBC
 		try {
-			PreparedStatement ps = connection.prepareStatement("UPDATE GRADES SET GRADE='P' WHERE SID='300312345' AND CCODE='CSIS3275'");
+			PreparedStatement ps = connection.prepareStatement("UPDATE GRADES SET GRADE='" + grade 
+					+ "' WHERE SID='" + sid + "' AND CCODE='" + cCode + "'");
+			ps.execute();
+			retrieveDB();
+			JOptionPane.showMessageDialog(null, "Grade Updated!");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void setupComponents() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 504, 345);
@@ -147,41 +159,89 @@ public class Assignment04 extends JFrame{
 
 		setContentPane(contentPane);
 		
-		lblCourseTitle = new JLabel("New label");
+		lblCourseTitle = new JLabel("");
 		lblCourseTitle.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		
+		cbxGrade = new JComboBox(Grade.values());
+		cbxGrade.addActionListener(new ActionListener () {
+			public void actionPerformed(ActionEvent e) {
+	            JComboBox comboBox = (JComboBox) e.getSource();
+	            Grade selected = ((Grade) comboBox.getSelectedItem());
+	            System.out.println(selected);
+	            if (selected.equals(Grade.valueOf("NA"))) {
+	            	btnSave.setEnabled(true);
+	            	cbxGrade.setEnabled(true);
+	            }
+			}
+		});
+		cbxGrade.addActionListener(cbxGrade);
+		cbxGrade.setEnabled(false);
+		cbxGrade.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		
 		cbxStudent = new JComboBox<Student>();
 		cbxStudent.setFont(new Font("Tahoma", Font.PLAIN, 16));
-		cbxStudent.addItem(new Student("", "", "", "", ""));
-		ArrayList<String> addedSidList = new ArrayList<String>();
+		cbxStudent.addItem(new Student("", ""));
 		for(int i = 0; i < students.size(); i++) {
 			Student currentStudent = students.get(i);
-			if (!addedSidList.contains(currentStudent.getSid())) {
 				cbxStudent.addItem(currentStudent);
-				addedSidList.add(currentStudent.getSid());
-			}
+//			}
 		}
-		
+	    DefaultListModel model = new DefaultListModel();
+		listCourseList = new JList(model);
+		listCourseList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				
+                if (!e.getValueIsAdjusting()) {
+    	            JList jList = (JList) e.getSource();
+    	            Course selectedCourse = (Course) jList.getSelectedValue();
+    	            if (selectedCourse != null) {
+    	            	System.out.println(selectedCourse);    	            	
+    	            	lblCourseTitle.setText(selectedCourse.getCourseTitle());
+    	            	cbxGrade.setSelectedItem(selectedCourse.getCourseGrade());
+    	            	System.out.println(selectedCourse.getCourseGrade());
+    	            }                	
+                }
+			}
+			
+		});
 		cbxStudent.addActionListener(new ActionListener () {
 			public void actionPerformed(ActionEvent e) {
 	            JComboBox comboBox1 = (JComboBox) e.getSource();
 	            Student selected = (Student) comboBox1.getSelectedItem();
 	            System.out.println(selected);
-
-
+	            model.clear();
+	            for (int i = 0; i < selected.getCourses().length; i++) {
+	            	model.addElement(selected.getCourses()[i]);
+	            }
 			}
 		});
 		
 		// how to input the name and sId from the array without duplication
 		
-		cbxGrade = new JComboBox();
-		cbxGrade.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		
 		btnSave = new JButton("Save");
+		btnSave.setEnabled(false);
+		btnSave.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println(cbxStudent.getSelectedItem());
+				Student selectedStudent = (Student) cbxStudent.getSelectedItem();
+				Course selectedCourse = (Course) listCourseList.getSelectedValue();
+				Grade selectedGrade = (Grade) cbxGrade.getSelectedItem();
+				updateGrade(selectedStudent.getSid(), selectedCourse.getCourseCode(), selectedGrade.toString());
+				cbxGrade.setSelectedItem(selectedGrade);
+	            if (!selectedGrade.equals(Grade.valueOf("NA"))) {
+	            	btnSave.setEnabled(false);
+	            	cbxGrade.setEnabled(false);
+	            }
+				
+			}
+			
+		});
 
 		btnSave.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		
-		listCourseList = new JList();
+
+
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.TRAILING)
@@ -227,9 +287,7 @@ public class Assignment04 extends JFrame{
 	public Assignment04() {
 		initDB();
 		retrieveDB();
-		closeDB();
 		setupComponents();
-		createEvents();
 	}
 }
 

@@ -1,19 +1,17 @@
 package winbuilder;
 
+import java.util.ArrayList;
+
 public class Student {
 	
 	private String name;
 	private String sid;
-	private String cCode;
-	private String cTitle;
-	private String grade;
+	private ArrayList<Course> courses;
 	
-	public Student(String name, String sid, String cCode, String cTitle, String grade) {
+	public Student(String name, String sid) {
 		this.name = name;
 		this.sid = sid;
-		this.cCode = cCode;
-		this.cTitle = cTitle;
-		this.grade = grade;
+		courses = new ArrayList<Course>();
 	}
 
 	public String getName() {
@@ -31,35 +29,30 @@ public class Student {
 	public void setSid(String sid) {
 		this.sid = sid;
 	}
-
-	public String getcCode() {
-		return cCode;
-	}
-
-	public void setcCode(String cCode) {
-		this.cCode = cCode;
-	}
-
-	public String getcTitle() {
-		return cTitle;
-	}
-
-	public void setcTitle(String cTitle) {
-		this.cTitle = cTitle;
-	}
-
-	public String getGrade() {
-		return grade;
-	}
-
-	public void setGrade(String grade) {
-		this.grade = grade;
+	
+	public Object[] getCourses() {
+		return this.courses.toArray();
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof Student)) {
+			return false;
+			}
+	      Student student = (Student)obj;
+	      return this.sid.equals(student.getSid());
+   }
+	@Override
 	public String toString() {
 		if (this.name == "") {
 			return "";
 		}
 		return this.name + "(" + this.sid + ")";
+	}
+
+	public void addCourse(Course course) {
+		// TODO Auto-generated method stub
+		courses.add(course);
+		
 	}
 }
