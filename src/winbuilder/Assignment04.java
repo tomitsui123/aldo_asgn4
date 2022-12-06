@@ -21,6 +21,8 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
 import javax.swing.JList;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.ActionEvent;
 
 /*	pending:
@@ -29,13 +31,13 @@ import java.awt.event.ActionEvent;
 	3. Enable the cbxGrade and btnSave if the grade is "NA"
 	4. Update the updateGrade() and save the new grade to DB*/
 	
-public class Assignment04 extends JFrame {
+public class Assignment04 extends JFrame{
 	static Connection connection = null;
 	static Statement statement = null;
 	static ResultSet rs = null;
 	
 	private JPanel contentPane;
-	private JComboBox<String> cbxStudent;
+	private JComboBox<Student> cbxStudent;
 
 	
 	ArrayList<Student> students = new ArrayList<Student>();
@@ -148,21 +150,29 @@ public class Assignment04 extends JFrame {
 		lblCourseTitle = new JLabel("New label");
 		lblCourseTitle.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		
-		cbxStudent = new JComboBox<String>();
+		cbxStudent = new JComboBox<Student>();
 		cbxStudent.setFont(new Font("Tahoma", Font.PLAIN, 16));
-
-		// how to input the name and sId from the array without duplication
-		cbxStudent.addItem("");
-		ArrayList<String> addedTxtList = new ArrayList<String>();
+		cbxStudent.addItem(new Student("", "", "", "", ""));
+		ArrayList<String> addedSidList = new ArrayList<String>();
 		for(int i = 0; i < students.size(); i++) {
 			Student currentStudent = students.get(i);
-			String displayedTxt = currentStudent.getName() + "(" + currentStudent.getSid() + ")";
-			if (!addedTxtList.contains(displayedTxt)) {
-				cbxStudent.addItem(displayedTxt);
-				addedTxtList.add(displayedTxt);
+			if (!addedSidList.contains(currentStudent.getSid())) {
+				cbxStudent.addItem(currentStudent);
+				addedSidList.add(currentStudent.getSid());
 			}
 		}
 		
+		cbxStudent.addActionListener(new ActionListener () {
+			public void actionPerformed(ActionEvent e) {
+	            JComboBox comboBox1 = (JComboBox) e.getSource();
+	            Student selected = (Student) comboBox1.getSelectedItem();
+	            System.out.println(selected);
+
+
+			}
+		});
+		
+		// how to input the name and sId from the array without duplication
 		
 		cbxGrade = new JComboBox();
 		cbxGrade.setFont(new Font("Tahoma", Font.PLAIN, 20));
