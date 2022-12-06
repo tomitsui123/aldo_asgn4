@@ -152,6 +152,16 @@ public class Assignment04 extends JFrame {
 		cbxStudent.setFont(new Font("Tahoma", Font.PLAIN, 16));
 
 		// how to input the name and sId from the array without duplication
+		cbxStudent.addItem("");
+		ArrayList<String> addedTxtList = new ArrayList<String>();
+		for(int i = 0; i < students.size(); i++) {
+			Student currentStudent = students.get(i);
+			String displayedTxt = currentStudent.getName() + "(" + currentStudent.getSid() + ")";
+			if (!addedTxtList.contains(displayedTxt)) {
+				cbxStudent.addItem(displayedTxt);
+				addedTxtList.add(displayedTxt);
+			}
+		}
 		
 		
 		cbxGrade = new JComboBox();
