@@ -35,10 +35,10 @@ public class Assignment04 extends JFrame {
 	static ResultSet rs = null;
 	
 	private JPanel contentPane;
-	private JComboBox cbxStudent;
+	private JComboBox<String> cbxStudent;
 
 	
-	ArrayList<Student> students = new ArrayList<>();
+	ArrayList<Student> students = new ArrayList<Student>();
 	private JList listCourseList;
 	private JLabel lblCourseTitle;
 	private JComboBox cbxGrade;
@@ -149,7 +149,7 @@ public class Assignment04 extends JFrame {
 		lblCourseTitle = new JLabel("New label");
 		lblCourseTitle.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		
-		cbxStudent = new JComboBox();
+		cbxStudent = new JComboBox<String>();
 		cbxStudent.setFont(new Font("Tahoma", Font.PLAIN, 16));
 
 		// how to input the name and sId from the array without duplication
