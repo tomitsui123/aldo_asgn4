@@ -55,4 +55,11 @@ public class Student {
 	public void setGrade(String grade) {
 		this.grade = grade;
 	}
+	
+	public String toString() {
+		if (this.name == "") {
+			return "";
+		}
+		return this.name + "(" + this.sid + ")";
+	}
 }
